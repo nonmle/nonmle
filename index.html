@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="./script.js"></script>
+</head>
+<body>
+    <h1>Currently Playing on Spotify</h1>
+    <div id="track-info">
+        <p id="track-name">Track Name: </p>
+        <p id="artist-name">Artist Name: </p>
+        <img id="album-image" src="" alt="Album Cover">
+    </div>
+    <button id="login-button">Log in with Spotify</button>
+
+    <style>
+        body{
+            background: #ebebeb;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 0;
+        }
+
+        h1{
+            font-size: 8pt;
+            display: none;
+        }
+
+        img{
+            width: 330px;
+            height: 330px;
+            z-index: 1;
+            border-radius: 50%;
+            background: linear-gradient(#0f0f0f, #ebebeb);
+            filter: blur(.50px);
+        }
+
+        p, h1{
+            position: absolute;
+            z-index: 0;
+            font-size: 18pt;
+            font-family: 'Times New Roman', Times, serif;
+            color: #ebebeb;
+            display: none;
+        }
+    </style>
+
+    <script>
+        const client_id = 'c42424a1710244158a4ea88630a8f273';
+        const redirect_uri = 'http://localhost:5500/callback.html';
+        const scope = 'user-read-playback-state user-read-currently-playing';
+
+        document.getElementById('login-button').addEventListener('click', () => {
+            const url = `https://accounts.spotify.com/authorize?response_type=token&client_id=${client_id}&scope=${scope}&redirect_uri=${redirect_uri}`;
+            window.location.href = url;
+        });
+
+        function updateTrackInfo() {
+            const access_token = localStorage.getItem('spotify_access_token');
+            if (access_token) {
+                fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+                    headers: {
+                        'Authorization': 'Bearer ' + access_token
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.item) {
+                        document.getElementById('track-name').innerText = `Track Name: ${data.item.name}`;
+                        document.getElementById('artist-name').innerText = `Artist Name: ${data.item.artists.map(artist => artist.name).join(', ')}`;
+                        const albumCoverUrl = data.item.album.images[0].url;
+                        document.getElementById('album-image').src = albumCoverUrl;
+                    }
+                });
+            }
+        }
+
+        updateTrackInfo();
+        setInterval(updateTrackInfo, 10000);
+    </script>
+</body>
+</html>
